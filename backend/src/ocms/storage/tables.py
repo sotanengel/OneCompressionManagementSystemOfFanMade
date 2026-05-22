@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -24,7 +25,7 @@ class JobRow(Base):
     region: Mapped[str] = mapped_column(String(50), nullable=False)
     spot: Mapped[bool] = mapped_column(nullable=False, default=False)
     max_runtime_hours: Mapped[int] = mapped_column(Integer, nullable=False)
-    feature_flags: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    feature_flags: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
     ec2_instance_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     s3_output_prefix: Mapped[str | None] = mapped_column(String(500), nullable=True)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from sqlalchemy import create_engine
+from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
@@ -17,7 +17,7 @@ def _get_database_url() -> str:
     return url
 
 
-def make_engine():  # type: ignore[no-untyped-def]
+def make_engine() -> Engine:
     return create_engine(_get_database_url())
 
 

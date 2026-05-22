@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from typing import Any
 
 import boto3
 
@@ -30,7 +31,7 @@ class SyncDaemon:
         for msg in messages:
             self._handle(sqs, msg)
 
-    def _handle(self, sqs, msg: dict) -> None:  # type: ignore[no-untyped-def]
+    def _handle(self, sqs: Any, msg: Any) -> None:
         body = json.loads(msg["Body"])
         job_id = body["job_id"]
         s3_prefix = body["s3_prefix"]
