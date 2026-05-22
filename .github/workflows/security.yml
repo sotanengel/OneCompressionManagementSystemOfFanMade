@@ -42,7 +42,10 @@ jobs:
         working-directory: backend
         run: |
           uv sync --extra dev
-          uv run pip-audit
+          # PYSEC-2026-161: starlette 1.0.1 has the fix but is not yet in the
+          # Takumi Guard proxy (pypi.flatt.tech). Remove this ignore once
+          # starlette >=1.0.1 is available through the proxy.
+          uv run pip-audit --ignore-vuln PYSEC-2026-161
         env:
           UV_INDEX_TAKUMI_GUARD_USERNAME: token
           UV_INDEX_TAKUMI_GUARD_PASSWORD: ${{ secrets.TAKUMI_GUARD_TOKEN }}
