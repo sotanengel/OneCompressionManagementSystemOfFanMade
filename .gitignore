@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# uv
+uv.lock
+
+# Environment
+.env
+*.env.local
+
+# Docker
+.dockerenv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Generated job scripts (keep .gitkeep)
+scripts/jobs/*.sh
+
+# Node (W4+)
+node_modules/
+.next/
+.pnpm-store/
