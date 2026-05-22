@@ -3,10 +3,10 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 import ocms.storage.tables  # noqa: F401 – registers all ORM models with Base
+from alembic import context
 from ocms.storage.db import Base
 
 config = context.config
