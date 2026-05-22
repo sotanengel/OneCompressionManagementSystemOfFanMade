@@ -1,4 +1,3 @@
-
 import pytest
 
 from ocms.config import Settings
