@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    name: Lint (ruff + mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install backend deps
+        working-directory: backend
+        run: uv sync --extra dev
+        env:
+          UV_INDEX_TAKUMI_GUARD_USERNAME: token
+          UV_INDEX_TAKUMI_GUARD_PASSWORD: ${{ secrets.TAKUMI_GUARD_TOKEN }}
+
+      - name: ruff check
+        working-directory: backend
+        run: uv run ruff check src tests
+
+      - name: ruff format check
+        working-directory: backend
+        run: uv run ruff format --check src tests
+
+      - name: mypy
+        working-directory: backend
+        run: uv run mypy src
+
+  test:
+    name: Test (unit + integration)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ocms
+          POSTGRES_PASSWORD: ocms_test
+          POSTGRES_DB: ocms_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      OCMS_DATABASE_URL: postgresql+psycopg://ocms:ocms_test@localhost:5432/ocms_test
+      OCMS_AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install backend deps
+        working-directory: backend
+        run: uv sync --extra dev
+        env:
+          UV_INDEX_TAKUMI_GUARD_USERNAME: token
+          UV_INDEX_TAKUMI_GUARD_PASSWORD: ${{ secrets.TAKUMI_GUARD_TOKEN }}
+
+      - name: Run Alembic migrations
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: pytest
+        working-directory: backend
+        run: uv run pytest -q --tb=short
+
+  all-checks:
+    name: All Checks Passed
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CI green"

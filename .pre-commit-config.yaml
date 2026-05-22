@@ -1,0 +1,54 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.8
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        files: ^backend/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        files: ^backend/src/
+        args: ["--config-file", "backend/pyproject.toml"]
+        additional_dependencies:
+          - pydantic>=2.11.0
+          - pydantic-settings>=2.9.0
+          - sqlalchemy>=2.0.40
+          - boto3-stubs[ec2,s3,sqs,secretsmanager]>=1.37.0
+
+  - repo: local
+    hooks:
+      - id: pytest-unit
+        name: pytest unit tests
+        entry: bash -c 'cd backend && .venv/bin/python -m pytest -q tests/unit -x'
+        language: system
+        pass_filenames: false
+        files: ^backend/
+
+      - id: no-aws-profile-in-subprocess
+        name: detect --profile in subprocess calls (Rule #5)
+        entry: >
+          bash -c '
+          if grep -rn "\"--profile\"" backend/src/ocms/ec2/ backend/src/ocms/sqs/ 2>/dev/null; then
+            echo "ERROR: --profile must not be hardcoded in subprocess calls (Rule #5)"
+            exit 1
+          fi
+          '
+        language: system
+        pass_filenames: false

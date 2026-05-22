@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ocms
+      POSTGRES_PASSWORD: ocms_local
+      POSTGRES_DB: ocms
+    ports:
+      - "5432:5432"
+    volumes:
+      - ocms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ocms"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OCMS_DATABASE_URL=postgresql+psycopg://ocms:ocms_local@db:5432/ocms
+      - OCMS_AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_DEFAULT_REGION=us-east-1
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ocms_pgdata:

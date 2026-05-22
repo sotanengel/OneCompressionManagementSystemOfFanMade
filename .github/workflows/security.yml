@@ -1,0 +1,48 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 2 * * 1"
+
+jobs:
+  trivy:
+    name: Trivy (filesystem)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          skip-dirs: ".venv,node_modules"
+
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+  pip-audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+
+      - name: Install and audit
+        working-directory: backend
+        run: |
+          uv sync --extra dev
+          uv run pip-audit
+        env:
+          UV_INDEX_TAKUMI_GUARD_USERNAME: token
+          UV_INDEX_TAKUMI_GUARD_PASSWORD: ${{ secrets.TAKUMI_GUARD_TOKEN }}

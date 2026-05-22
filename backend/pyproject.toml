@@ -1,0 +1,66 @@
+[project]
+name = "ocms-backend"
+version = "0.1.0"
+description = "OneCompression Management System – Backend API"
+requires-python = ">=3.12, <3.14"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.35.0",
+    "sqlalchemy>=2.0.40",
+    "alembic>=1.15.0",
+    "psycopg[binary]>=3.2.0",
+    "pydantic>=2.11.0",
+    "pydantic-settings>=2.9.0",
+    "boto3>=1.37.0",
+    "structlog>=25.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.26.0",
+    "httpx>=0.28.0",
+    "mypy>=1.15.0",
+    "ruff>=0.11.0",
+    "pytest-postgresql>=6.1.0",
+    "moto[ec2,s3,sqs,secretsmanager]>=5.0.0",
+    "boto3-stubs[ec2,s3,sqs,secretsmanager]>=1.37.0",
+    "pip-audit>=2.8.0",
+]
+
+[build-system]
+requires = ["setuptools>=69.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths  = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "integration: marks integration tests (require DB)",
+    "e2e: marks end-to-end tests",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+packages = ["ocms"]
+disable_error_code = ["misc", "no-any-return"]
+
+[[tool.uv.index]]
+name = "takumi-guard"
+url  = "https://pypi.flatt.tech/simple/"
+default = true
