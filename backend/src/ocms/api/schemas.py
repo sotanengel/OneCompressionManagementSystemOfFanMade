@@ -103,3 +103,9 @@ class CostEstimateResponse(BaseModel):
     estimated_cost_usd: Decimal
     on_demand_rate_usd_hr: Decimal
     spot_discount_pct: float | None
+
+
+class CostSummaryResponse(BaseModel):
+    total_usd: Decimal
+    by_model: dict[str, Decimal]
+    budget_warning: bool

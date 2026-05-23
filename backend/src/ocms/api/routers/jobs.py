@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ocms.api.deps import get_db
+from ocms.api.routers.cost import BUDGET_HARD_LIMIT_USD, total_cost_all_jobs
 from ocms.api.schemas import (
     CostEstimateResponse,
     JobCreateRequest,
@@ -59,6 +60,15 @@ def create_job(
     db: Session = Depends(get_db),
 ) -> JobResponse:
     repo = JobRepository(db)
+    existing_jobs = repo.list_all()
+    total = total_cost_all_jobs(existing_jobs)
+    if total >= BUDGET_HARD_LIMIT_USD:
+        raise HTTPException(
+            status_code=402,
+            detail=(
+                f"Budget limit exceeded: cumulative cost ${total:.2f} >= ${BUDGET_HARD_LIMIT_USD}"
+            ),
+        )
     flags = FeatureFlags(
         check_env_preflight=request.feature_flags.check_env_preflight,
         checkpoint=request.feature_flags.checkpoint,
