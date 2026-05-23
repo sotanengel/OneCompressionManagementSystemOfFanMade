@@ -49,8 +49,9 @@ def client():
 class TestCostSummaryEndpoint:
     def test_returns_correct_structure(self, client: TestClient) -> None:
         now = datetime.now(UTC)
+        llama = "meta-llama/Llama-3.1-8B"
         jobs = [
-            _make_job(model_id="meta-llama/Llama-3.1-8B", actual_cost_usd=Decimal("10.00"), created_at=now),
+            _make_job(model_id=llama, actual_cost_usd=Decimal("10.00"), created_at=now),
             _make_job(model_id="Qwen/Qwen3-8B", actual_cost_usd=Decimal("8.00"), created_at=now),
         ]
         with patch("ocms.api.routers.cost.JobRepository") as mock_repo_cls:
@@ -89,9 +90,10 @@ class TestCostSummaryEndpoint:
 
     def test_groups_by_model(self, client: TestClient) -> None:
         now = datetime.now(UTC)
+        llama = "meta-llama/Llama-3.1-8B"
         jobs = [
-            _make_job(model_id="meta-llama/Llama-3.1-8B", actual_cost_usd=Decimal("10.00"), created_at=now),
-            _make_job(model_id="meta-llama/Llama-3.1-8B", actual_cost_usd=Decimal("5.00"), created_at=now),
+            _make_job(model_id=llama, actual_cost_usd=Decimal("10.00"), created_at=now),
+            _make_job(model_id=llama, actual_cost_usd=Decimal("5.00"), created_at=now),
             _make_job(model_id="Qwen/Qwen3-8B", actual_cost_usd=Decimal("8.00"), created_at=now),
         ]
         with patch("ocms.api.routers.cost.JobRepository") as mock_repo_cls:
