@@ -18,7 +18,12 @@ def _get_database_url() -> str:
 
 
 def make_engine() -> Engine:
-    return create_engine(_get_database_url())
+    return create_engine(
+        _get_database_url(),
+        pool_size=20,
+        max_overflow=10,
+        pool_pre_ping=True,
+    )
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)

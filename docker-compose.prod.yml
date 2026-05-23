@@ -1,0 +1,15 @@
+services:
+  api:
+    image: ${ECR_IMAGE}
+    ports:
+      - "8000:8000"
+    environment:
+      - OCMS_DATABASE_URL
+      - OCMS_AWS_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
