@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ocms.api.routers.cost import router as cost_router
 from ocms.api.routers.jobs import router as jobs_router
 from ocms.api.routers.log_stream import router as log_stream_router
 
@@ -17,6 +18,7 @@ app.add_middleware(
 
 app.include_router(jobs_router)
 app.include_router(log_stream_router)
+app.include_router(cost_router)
 
 
 @app.get("/health")
