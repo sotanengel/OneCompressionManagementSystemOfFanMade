@@ -51,6 +51,7 @@ def _to_response(job) -> JobResponse:  # type: ignore[no-untyped-def]
         failure_reason=job.failure_reason,
         rerun_script_path=job.rerun_script_path,
         git_commit_onecompression=job.git_commit_onecompression,
+        priority=job.priority,
     )
 
 
@@ -88,6 +89,7 @@ def create_job(
         max_runtime_hours=request.max_runtime_hours,
         feature_flags=flags,
         s3_output_prefix=request.s3_output_prefix,
+        priority=request.priority,
     )
     # Persist estimated cost via raw update (no status transition needed)
     from ocms.storage.tables import JobRow
