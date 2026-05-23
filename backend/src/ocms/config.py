@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
+import boto3
+from botocore.exceptions import ClientError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,3 +21,20 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()  # type: ignore[call-arg]
+
+
+def get_secret(secret_name: str) -> str:
+    region = os.environ.get("OCMS_AWS_REGION", "us-east-1")
+    try:
+        client = boto3.client("secretsmanager", region_name=region)
+        response = client.get_secret_value(SecretId=secret_name)
+        return response["SecretString"]
+    except ClientError:
+        pass
+
+    env_key = "OCMS_SECRET_" + secret_name.upper().replace("/", "_").replace("-", "_")
+    value = os.environ.get(env_key)
+    if value is not None:
+        return value
+
+    raise RuntimeError(f"Secret not found: {secret_name!r} (tried Secrets Manager and {env_key})")
