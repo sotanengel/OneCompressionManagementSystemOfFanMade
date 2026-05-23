@@ -45,7 +45,9 @@ asyncio_mode = "auto"
 markers = [
     "integration: marks integration tests (require DB)",
     "e2e: marks end-to-end tests",
+    "load: marks load tests (require a running server on localhost:8000)",
 ]
+addopts = "-m 'not load'"
 
 [tool.ruff]
 line-length = 100
