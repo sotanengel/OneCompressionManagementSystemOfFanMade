@@ -80,9 +80,37 @@ jobs:
         working-directory: backend
         run: uv run pytest -q --tb=short
 
+  frontend-lint:
+    name: Frontend lint + type-check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          TAKUMI_GUARD_TOKEN: ${{ secrets.TAKUMI_GUARD_TOKEN }}
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
+
   all-checks:
     name: All Checks Passed
-    needs: [lint, test]
+    needs: [lint, test, frontend-lint]
     runs-on: ubuntu-latest
     steps:
       - run: echo "CI green"
