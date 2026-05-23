@@ -24,6 +24,13 @@ BITS={bits}
 INSTANCE_TYPE="{instance_type}"
 JOB_ID="{job_id}"
 
+# Fetch HF_TOKEN from Secrets Manager via IAM role (Rule #5: use IAM role, not profile)
+export HF_TOKEN=$(aws secretsmanager get-secret-value \\
+    --secret-id ocms/hf-token \\
+    --query SecretString \\
+    --output text \\
+    --region "{region}" 2>/dev/null || echo "")
+
 # Rule #6: wrap pgrep with set +e / set -e
 check_already_running() {{
     set +e
@@ -104,6 +111,7 @@ def generate_userdata(job: Job) -> str:
         quant_method=job.quant_method,
         bits=job.bits,
         instance_type=job.instance_type,
+        region=job.region,
         check_env_flag=check_env_flag,
         checkpoint_trap=checkpoint_trap,
     )
