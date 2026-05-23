@@ -108,6 +108,13 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Build
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_COGNITO_USER_POOL_ID: dummy
+          NEXT_PUBLIC_COGNITO_CLIENT_ID: dummy
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+
   all-checks:
     name: All Checks Passed
     needs: [lint, test, frontend-lint]

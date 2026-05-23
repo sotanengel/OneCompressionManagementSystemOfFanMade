@@ -1,8 +1,8 @@
-export default function JobDetailPage({ params }: { params: { id: string } }) {
+export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">ジョブ詳細: {params.id}</h1>
-      <p className="text-gray-500">W5 で SSE ログストリームを実装予定</p>
+      <h1 className="text-2xl font-bold mb-4">ジョブ詳細: {id}</h1>
     </div>
   );
 }
