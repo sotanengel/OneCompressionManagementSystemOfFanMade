@@ -15,6 +15,7 @@ class JobStatus(StrEnum):
     SYNCING = "syncing"
     COMPLETED = "completed"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 @dataclass
@@ -47,6 +48,8 @@ class Job:
     rerun_script_path: str | None = None
     git_commit_onecompression: str | None = None
     git_commit_sotanengel: str | None = None
+    checkpoint_s3_prefix: str | None = None
+    resumed_from_job_id: uuid.UUID | None = None
 
 
 @dataclass

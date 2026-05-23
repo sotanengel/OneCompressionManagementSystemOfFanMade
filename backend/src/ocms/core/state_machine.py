@@ -3,13 +3,14 @@ from __future__ import annotations
 from ocms.core.models import JobStatus
 
 ALLOWED_TRANSITIONS: dict[JobStatus, set[JobStatus]] = {
-    JobStatus.PENDING: {JobStatus.EC2_LAUNCHING, JobStatus.FAILED},
-    JobStatus.EC2_LAUNCHING: {JobStatus.RUNNING, JobStatus.FAILED},
-    JobStatus.RUNNING: {JobStatus.UPLOADING, JobStatus.FAILED},
-    JobStatus.UPLOADING: {JobStatus.SYNCING, JobStatus.FAILED},
-    JobStatus.SYNCING: {JobStatus.COMPLETED, JobStatus.FAILED},
+    JobStatus.PENDING: {JobStatus.EC2_LAUNCHING, JobStatus.FAILED, JobStatus.CANCELLED},
+    JobStatus.EC2_LAUNCHING: {JobStatus.RUNNING, JobStatus.FAILED, JobStatus.CANCELLED},
+    JobStatus.RUNNING: {JobStatus.UPLOADING, JobStatus.FAILED, JobStatus.CANCELLED},
+    JobStatus.UPLOADING: {JobStatus.SYNCING, JobStatus.FAILED, JobStatus.CANCELLED},
+    JobStatus.SYNCING: {JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED},
     JobStatus.COMPLETED: set(),
     JobStatus.FAILED: set(),
+    JobStatus.CANCELLED: set(),
 }
 
 
