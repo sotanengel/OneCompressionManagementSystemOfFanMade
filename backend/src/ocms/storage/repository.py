@@ -116,6 +116,14 @@ class JobRepository:
         )
         return [_log_to_domain(r) for r in rows]
 
+    def get_logs_since(self, job_id: uuid.UUID, since: datetime | None) -> list[JobLog]:
+        self._session.expire_all()
+        query = self._session.query(JobLogRow).filter(JobLogRow.job_id == job_id)
+        if since is not None:
+            query = query.filter(JobLogRow.timestamp > since)
+        rows = query.order_by(JobLogRow.timestamp.asc()).all()
+        return [_log_to_domain(r) for r in rows]
+
 
 def _to_domain(row: JobRow) -> Job:
     flags_dict = row.feature_flags or {}
