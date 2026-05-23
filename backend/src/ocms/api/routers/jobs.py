@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import uuid
 from dataclasses import asdict
 
+import boto3
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -15,9 +17,12 @@ from ocms.api.schemas import (
     JobLogsResponse,
     JobResponse,
 )
-from ocms.core.models import FeatureFlags
+from ocms.core.models import FeatureFlags, JobStatus
 from ocms.ec2.cost import estimate_cost
 from ocms.storage.repository import JobRepository
+
+_RETRYABLE_STATUSES = {JobStatus.FAILED, JobStatus.CANCELLED}
+_S3_BUCKET = os.environ.get("OCMS_S3_BUCKET", "ocms-bucket")
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -119,6 +124,47 @@ def get_job_logs(job_id: uuid.UUID, db: Session = Depends(get_db)) -> JobLogsRes
         for log in logs
     ]
     return JobLogsResponse(items=items, total=len(items))
+
+
+@router.post("/{job_id}/retry", status_code=201, response_model=JobResponse)
+def retry_job(job_id: uuid.UUID, db: Session = Depends(get_db)) -> JobResponse:
+    repo = JobRepository(db)
+    original = repo.get(job_id)
+    if not original:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if original.status not in _RETRYABLE_STATUSES:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Job {job_id} is in status '{original.status}' and cannot be retried",
+        )
+
+    checkpoint_prefix: str | None = None
+    try:
+        s3 = boto3.client("s3", region_name=original.region)
+        resp = s3.list_objects_v2(
+            Bucket=_S3_BUCKET,
+            Prefix=f"jobs/{job_id}/checkpoint/latest/",
+            MaxKeys=1,
+        )
+        if resp.get("Contents"):
+            checkpoint_prefix = f"s3://{_S3_BUCKET}/jobs/{job_id}/checkpoint/latest/"
+    except Exception:
+        pass
+
+    new_job = repo.create(
+        model_id=original.model_id,
+        quant_method=original.quant_method,
+        bits=original.bits,
+        instance_type=original.instance_type,
+        region=original.region,
+        spot=original.spot,
+        max_runtime_hours=original.max_runtime_hours,
+        feature_flags=original.feature_flags,
+        user_id=original.user_id,
+        checkpoint_s3_prefix=checkpoint_prefix,
+        resumed_from_job_id=original.job_id,
+    )
+    return _to_response(new_job)
 
 
 @router.get("/{job_id}/cost-estimate", response_model=CostEstimateResponse)

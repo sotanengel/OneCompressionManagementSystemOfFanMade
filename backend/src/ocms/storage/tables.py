@@ -40,6 +40,10 @@ class JobRow(Base):
     rerun_script_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     git_commit_onecompression: Mapped[str | None] = mapped_column(String(40), nullable=True)
     git_commit_sotanengel: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    checkpoint_s3_prefix: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resumed_from_job_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("jobs.job_id"), nullable=True
+    )
 
     logs: Mapped[list[JobLogRow]] = relationship(
         "JobLogRow", back_populates="job", cascade="all, delete-orphan"

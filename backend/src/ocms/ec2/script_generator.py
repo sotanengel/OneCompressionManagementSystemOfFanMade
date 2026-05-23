@@ -62,13 +62,35 @@ POLL_EXIT_WHEN_TRAINING_EC2_NOT_RUNNING=1 \\
 """
 
 _CHECKPOINT_TRAP = """\
-# Rule: checkpoint on SIGTERM (Spot interruption)
-checkpoint_on_sigterm() {
+# Spot interruption monitor via IMDSv2 (runs in background)
+_spot_monitor() {{
+    while true; do
+        TOKEN=$(curl -sX PUT "http://169.254.169.254/latest/api/token" \\
+            -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" 2>/dev/null)
+        ACTION=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" \\
+            "http://169.254.169.254/latest/meta-data/spot/instance-action" 2>/dev/null || echo "")
+        if [ -n "$ACTION" ]; then
+            echo "Spot interruption detected — flushing checkpoint"
+            aws s3 sync "$STATE_DIR/" "s3://ocms-artifacts/$JOB_ID/checkpoint/" \\
+                --endpoint-url https://s3-accelerate.amazonaws.com || true
+            break
+        fi
+        set +e
+        pgrep -f "onecomp" > /dev/null 2>&1
+        local rc=$?
+        set -e
+        [ $rc -ne 0 ] && break
+        sleep 2
+    done
+}}
+_spot_monitor &
+
+checkpoint_on_sigterm() {{
     echo "SIGTERM received — uploading checkpoint"
     aws s3 sync "$STATE_DIR/" "s3://ocms-artifacts/$JOB_ID/checkpoint/" \\
         --endpoint-url https://s3-accelerate.amazonaws.com || true
     exit 0
-}
+}}
 trap checkpoint_on_sigterm SIGTERM SIGINT
 """
 

@@ -29,6 +29,8 @@ class JobRepository:
         feature_flags: FeatureFlags,
         user_id: str | None = None,
         s3_output_prefix: str | None = None,
+        checkpoint_s3_prefix: str | None = None,
+        resumed_from_job_id: uuid.UUID | None = None,
     ) -> Job:
         row = JobRow(
             job_id=uuid.uuid4(),
@@ -43,6 +45,8 @@ class JobRepository:
             feature_flags=asdict(feature_flags),
             status=JobStatus.PENDING,
             s3_output_prefix=s3_output_prefix,
+            checkpoint_s3_prefix=checkpoint_s3_prefix,
+            resumed_from_job_id=resumed_from_job_id,
             created_at=datetime.now(UTC),
         )
         self._session.add(row)
@@ -142,6 +146,8 @@ def _to_domain(row: JobRow) -> Job:
         rerun_script_path=row.rerun_script_path,
         git_commit_onecompression=row.git_commit_onecompression,
         git_commit_sotanengel=row.git_commit_sotanengel,
+        checkpoint_s3_prefix=row.checkpoint_s3_prefix,
+        resumed_from_job_id=row.resumed_from_job_id,
     )
 
 
