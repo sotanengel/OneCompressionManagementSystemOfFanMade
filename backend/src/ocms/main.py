@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ocms.api.routers.jobs import router as jobs_router
+from ocms.api.routers.log_stream import router as log_stream_router
 
 app = FastAPI(title="OneCompression Management System", version="0.1.0")
 
@@ -15,6 +16,7 @@ app.add_middleware(
 )
 
 app.include_router(jobs_router)
+app.include_router(log_stream_router)
 
 
 @app.get("/health")
