@@ -108,36 +108,6 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-  docker-build:
-    name: Docker build + ECR push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [lint, test]
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ECR_ROLE_ARN }}
-          aws-region: us-east-1
-
-      - name: Login to ECR
-        id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: backend
-          push: true
-          tags: |
-            ${{ steps.ecr-login.outputs.registry }}/ocms-backend:${{ github.sha }}
-            ${{ steps.ecr-login.outputs.registry }}/ocms-backend:latest
-
   all-checks:
     name: All Checks Passed
     needs: [lint, test, frontend-lint]
