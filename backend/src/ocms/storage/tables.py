@@ -44,6 +44,7 @@ class JobRow(Base):
     resumed_from_job_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("jobs.job_id"), nullable=True
     )
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     logs: Mapped[list[JobLogRow]] = relationship(
         "JobLogRow", back_populates="job", cascade="all, delete-orphan"

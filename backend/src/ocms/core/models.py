@@ -50,6 +50,7 @@ class Job:
     git_commit_sotanengel: str | None = None
     checkpoint_s3_prefix: str | None = None
     resumed_from_job_id: uuid.UUID | None = None
+    priority: int = 0
 
 
 @dataclass

@@ -31,6 +31,7 @@ class JobRepository:
         s3_output_prefix: str | None = None,
         checkpoint_s3_prefix: str | None = None,
         resumed_from_job_id: uuid.UUID | None = None,
+        priority: int = 0,
     ) -> Job:
         row = JobRow(
             job_id=uuid.uuid4(),
@@ -48,6 +49,7 @@ class JobRepository:
             checkpoint_s3_prefix=checkpoint_s3_prefix,
             resumed_from_job_id=resumed_from_job_id,
             created_at=datetime.now(UTC),
+            priority=priority,
         )
         self._session.add(row)
         self._session.flush()
@@ -60,6 +62,19 @@ class JobRepository:
     def list_all(self) -> list[Job]:
         rows = self._session.query(JobRow).order_by(JobRow.created_at.desc()).all()
         return [_to_domain(r) for r in rows]
+
+    def list_pending_by_priority(self) -> list[Job]:
+        rows = (
+            self._session.query(JobRow)
+            .filter(JobRow.status == JobStatus.PENDING)
+            .order_by(JobRow.priority.desc(), JobRow.created_at.asc())
+            .all()
+        )
+        return [_to_domain(r) for r in rows]
+
+    @staticmethod
+    def _sort_pending_by_priority(jobs: list[Job]) -> list[Job]:
+        return sorted(jobs, key=lambda j: (-j.priority, j.created_at))
 
     def update_status(
         self,
@@ -156,6 +171,7 @@ def _to_domain(row: JobRow) -> Job:
         git_commit_sotanengel=row.git_commit_sotanengel,
         checkpoint_s3_prefix=row.checkpoint_s3_prefix,
         resumed_from_job_id=row.resumed_from_job_id,
+        priority=row.priority,
     )
 
 

@@ -41,6 +41,7 @@ class JobCreateRequest(BaseModel):
     max_runtime_hours: int = Field(default=4, ge=1, le=48)
     feature_flags: FeatureFlagsRequest = Field(default_factory=FeatureFlagsRequest)
     s3_output_prefix: str | None = None
+    priority: int = Field(default=0, ge=0, le=100)
 
     @model_validator(mode="after")
     def validate_fp8_bits(self) -> JobCreateRequest:
@@ -71,6 +72,7 @@ class JobResponse(BaseModel):
     failure_reason: str | None
     rerun_script_path: str | None
     git_commit_onecompression: str | None
+    priority: int
 
     model_config = {"from_attributes": True}
 
