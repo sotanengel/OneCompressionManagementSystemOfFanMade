@@ -111,3 +111,29 @@ class CostSummaryResponse(BaseModel):
     total_usd: Decimal
     by_model: dict[str, Decimal]
     budget_warning: bool
+
+
+class ThroughputPoint(BaseModel):
+    date: str  # YYYY-MM-DD (UTC)
+    count: int
+
+
+class FailureReason(BaseModel):
+    reason: str
+    count: int
+
+
+class QueueDepth(BaseModel):
+    pending: int
+    ec2_launching: int
+    running: int
+
+
+class JobStatsResponse(BaseModel):
+    period: str
+    total_jobs: int
+    status_counts: dict[str, int]
+    queue_depth: QueueDepth
+    throughput: list[ThroughputPoint]
+    avg_duration_sec_by_method: dict[str, float]
+    failure_reasons: list[FailureReason]

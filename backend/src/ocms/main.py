@@ -7,6 +7,7 @@ from ocms.api.routers.cancel import router as cancel_router
 from ocms.api.routers.cost import router as cost_router
 from ocms.api.routers.jobs import router as jobs_router
 from ocms.api.routers.log_stream import router as log_stream_router
+from ocms.api.routers.stats import router as stats_router
 from ocms.config import Settings, get_settings
 
 
@@ -27,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(log_stream_router)
     app.include_router(cost_router)
     app.include_router(cancel_router)
+    app.include_router(stats_router)
 
     @app.get("/health")
     def health() -> dict[str, str]:
