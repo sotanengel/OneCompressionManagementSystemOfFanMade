@@ -20,7 +20,7 @@ from ocms.api.schemas import (
     JobResponse,
 )
 from ocms.config import get_settings
-from ocms.core.models import FeatureFlags, JobStatus
+from ocms.core.models import FeatureFlags, Job, JobStatus
 from ocms.ec2.cost import estimate_cost
 from ocms.storage.repository import JobRepository
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-def _to_response(job) -> JobResponse:  # type: ignore[no-untyped-def]
+def _to_response(job: Job) -> JobResponse:
     return JobResponse(
         job_id=job.job_id,
         user_id=job.user_id,
