@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import asdict
 
 import boto3
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -18,16 +20,19 @@ from ocms.api.schemas import (
     JobResponse,
 )
 from ocms.config import get_settings
-from ocms.core.models import FeatureFlags, JobStatus
+from ocms.core.models import FeatureFlags, Job, JobStatus
 from ocms.ec2.cost import estimate_cost
 from ocms.storage.repository import JobRepository
 
 _RETRYABLE_STATUSES = {JobStatus.FAILED, JobStatus.CANCELLED}
+_FATAL_S3_ERROR_CODES = frozenset({"NoSuchBucket", "AccessDenied", "AllAccessDisabled"})
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
-def _to_response(job) -> JobResponse:  # type: ignore[no-untyped-def]
+def _to_response(job: Job) -> JobResponse:
     return JobResponse(
         job_id=job.job_id,
         user_id=job.user_id,
@@ -160,8 +165,26 @@ def retry_job(job_id: uuid.UUID, db: Session = Depends(get_db)) -> JobResponse:
         )
         if resp.get("Contents"):
             checkpoint_prefix = f"s3://{bucket}/jobs/{job_id}/checkpoint/latest/"
-    except Exception:
-        pass
+    except ClientError as exc:
+        code = exc.response.get("Error", {}).get("Code", "")
+        if code in _FATAL_S3_ERROR_CODES:
+            # The bucket itself is broken — retrying any job would silently
+            # lose checkpoint data, so surface this to the caller instead of
+            # quietly creating a fresh run.
+            logger.error(
+                "S3 checkpoint lookup failed for job %s: bucket=%s code=%s",
+                job_id, bucket, code,
+            )
+            raise HTTPException(
+                status_code=502,
+                detail=f"Checkpoint bucket unavailable ({code})",
+            ) from exc
+        # Object-level errors (e.g. nothing under the prefix) — treat as "no
+        # checkpoint" but log so operators can spot recurring noise.
+        logger.warning(
+            "S3 checkpoint lookup degraded for job %s: bucket=%s code=%s",
+            job_id, bucket, code,
+        )
 
     new_job = repo.create(
         model_id=original.model_id,

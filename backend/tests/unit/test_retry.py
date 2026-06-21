@@ -112,3 +112,78 @@ class TestRetryEndpoint:
         mock_repo_cls.return_value.get.return_value = running_job
         resp = client.post(f"/jobs/{running_job.job_id}/retry")
         assert resp.status_code == 409
+
+    @patch("ocms.api.routers.jobs.boto3.client")
+    @patch("ocms.api.routers.jobs.JobRepository")
+    def test_retry_502_when_bucket_missing(
+        self,
+        mock_repo_cls: MagicMock,
+        mock_boto: MagicMock,
+        client: TestClient,
+    ) -> None:
+        from botocore.exceptions import ClientError
+
+        original_job = _make_job()
+        mock_repo_cls.return_value.get.return_value = original_job
+
+        mock_s3 = MagicMock()
+        mock_s3.list_objects_v2.side_effect = ClientError(
+            {"Error": {"Code": "NoSuchBucket", "Message": "not found"}},
+            "ListObjectsV2",
+        )
+        mock_boto.return_value = mock_s3
+
+        resp = client.post(f"/jobs/{original_job.job_id}/retry")
+        assert resp.status_code == 502
+        mock_repo_cls.return_value.create.assert_not_called()
+
+    @patch("ocms.api.routers.jobs.boto3.client")
+    @patch("ocms.api.routers.jobs.JobRepository")
+    def test_retry_502_when_access_denied(
+        self,
+        mock_repo_cls: MagicMock,
+        mock_boto: MagicMock,
+        client: TestClient,
+    ) -> None:
+        from botocore.exceptions import ClientError
+
+        original_job = _make_job()
+        mock_repo_cls.return_value.get.return_value = original_job
+
+        mock_s3 = MagicMock()
+        mock_s3.list_objects_v2.side_effect = ClientError(
+            {"Error": {"Code": "AccessDenied", "Message": "denied"}},
+            "ListObjectsV2",
+        )
+        mock_boto.return_value = mock_s3
+
+        resp = client.post(f"/jobs/{original_job.job_id}/retry")
+        assert resp.status_code == 502
+        mock_repo_cls.return_value.create.assert_not_called()
+
+    @patch("ocms.api.routers.jobs.boto3.client")
+    @patch("ocms.api.routers.jobs.JobRepository")
+    def test_retry_continues_on_non_fatal_s3_error(
+        self,
+        mock_repo_cls: MagicMock,
+        mock_boto: MagicMock,
+        client: TestClient,
+    ) -> None:
+        from botocore.exceptions import ClientError
+
+        original_job = _make_job()
+        new_job = _make_job(status=JobStatus.PENDING)
+        mock_repo_cls.return_value.get.return_value = original_job
+        mock_repo_cls.return_value.create.return_value = new_job
+
+        mock_s3 = MagicMock()
+        mock_s3.list_objects_v2.side_effect = ClientError(
+            {"Error": {"Code": "SlowDown", "Message": "throttled"}},
+            "ListObjectsV2",
+        )
+        mock_boto.return_value = mock_s3
+
+        resp = client.post(f"/jobs/{original_job.job_id}/retry")
+        assert resp.status_code == 201
+        kwargs = mock_repo_cls.return_value.create.call_args.kwargs
+        assert kwargs.get("checkpoint_s3_prefix") is None
