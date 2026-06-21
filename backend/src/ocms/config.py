@@ -5,6 +5,7 @@ from functools import lru_cache
 
 import boto3
 from botocore.exceptions import ClientError
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,19 @@ class Settings(BaseSettings):
     max_concurrent_jobs: int = 10
     cost_warn_usd: float = 50.0
     cost_hard_stop_usd: float = 100.0
+    cors_origins: list[str] = []
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_cors_origins(cls, value: object) -> object:
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return []
+            if stripped.startswith("["):
+                return value
+            return [item.strip() for item in stripped.split(",") if item.strip()]
+        return value
 
 
 @lru_cache

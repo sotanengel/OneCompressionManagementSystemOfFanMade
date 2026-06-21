@@ -5,7 +5,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from ocms.storage.db import Base
+# Ensure required settings are present when ocms.main / ocms.config is imported
+# at collection time. Individual tests can still override via monkeypatch.
+os.environ.setdefault(
+    "OCMS_DATABASE_URL",
+    "postgresql+psycopg://ocms:ocms_local@localhost:5432/ocms",
+)
+
+from ocms.storage.db import Base  # noqa: E402
 
 
 def _db_url() -> str:
