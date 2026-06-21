@@ -72,11 +72,13 @@ class TestLogStreamEndpoint:
 
         from fastapi import FastAPI
 
+        from ocms.api.auth import verify_cognito_jwt
         from ocms.api.deps import get_db
 
         app = FastAPI()
         app.include_router(router)
         app.dependency_overrides[get_db] = lambda: MagicMock()
+        app.dependency_overrides[verify_cognito_jwt] = lambda: "test-user"
         with TestClient(app, raise_server_exceptions=False) as c:
             yield c
 

@@ -9,6 +9,7 @@ from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from ocms.api.auth import verify_cognito_jwt
 from ocms.api.deps import get_db
 from ocms.api.routers.cost import BUDGET_HARD_LIMIT_USD, total_cost_all_jobs
 from ocms.api.schemas import (
@@ -29,7 +30,11 @@ _FATAL_S3_ERROR_CODES = frozenset({"NoSuchBucket", "AccessDenied", "AllAccessDis
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/jobs", tags=["jobs"])
+router = APIRouter(
+    prefix="/jobs",
+    tags=["jobs"],
+    dependencies=[Depends(verify_cognito_jwt)],
+)
 
 
 def _to_response(job: Job) -> JobResponse:

@@ -12,8 +12,31 @@ os.environ.setdefault(
     "postgresql+psycopg://ocms:ocms_local@localhost:5432/ocms",
 )
 os.environ.setdefault("OCMS_S3_BUCKET", "ocms-bucket")
+os.environ.setdefault("OCMS_COGNITO_USER_POOL_ID", "us-east-1_TESTPOOL")
+os.environ.setdefault("OCMS_COGNITO_CLIENT_ID", "test-client-id")
 
+from ocms.api.auth import verify_cognito_jwt  # noqa: E402
 from ocms.storage.db import Base  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _bypass_cognito_for_imported_app() -> Generator[None, None, None]:
+    """Override the JWT dep on the module-level `ocms.main:app`.
+
+    Per-test apps built with `FastAPI()` aren't covered here — those tests
+    should override the dep themselves, the same way they already override
+    `get_db`.
+    """
+    try:
+        from ocms.main import app
+    except Exception:
+        yield
+        return
+    app.dependency_overrides[verify_cognito_jwt] = lambda: "test-user-id"
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(verify_cognito_jwt, None)
 
 
 def _db_url() -> str:

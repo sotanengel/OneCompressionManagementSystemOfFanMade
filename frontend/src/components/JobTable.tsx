@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { apiFetch } from "@/lib/api";
+
 type Job = {
   job_id: string;
   model_id: string;
@@ -27,7 +29,7 @@ export function JobTable() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/jobs")
+    apiFetch("/api/jobs")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
