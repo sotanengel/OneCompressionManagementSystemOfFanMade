@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import uuid
 from dataclasses import asdict
 
@@ -18,12 +17,12 @@ from ocms.api.schemas import (
     JobLogsResponse,
     JobResponse,
 )
+from ocms.config import get_settings
 from ocms.core.models import FeatureFlags, JobStatus
 from ocms.ec2.cost import estimate_cost
 from ocms.storage.repository import JobRepository
 
 _RETRYABLE_STATUSES = {JobStatus.FAILED, JobStatus.CANCELLED}
-_S3_BUCKET = os.environ.get("OCMS_S3_BUCKET", "ocms-bucket")
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
@@ -150,16 +149,17 @@ def retry_job(job_id: uuid.UUID, db: Session = Depends(get_db)) -> JobResponse:
             detail=f"Job {job_id} is in status '{original.status}' and cannot be retried",
         )
 
+    bucket = get_settings().s3_bucket
     checkpoint_prefix: str | None = None
     try:
         s3 = boto3.client("s3", region_name=original.region)
         resp = s3.list_objects_v2(
-            Bucket=_S3_BUCKET,
+            Bucket=bucket,
             Prefix=f"jobs/{job_id}/checkpoint/latest/",
             MaxKeys=1,
         )
         if resp.get("Contents"):
-            checkpoint_prefix = f"s3://{_S3_BUCKET}/jobs/{job_id}/checkpoint/latest/"
+            checkpoint_prefix = f"s3://{bucket}/jobs/{job_id}/checkpoint/latest/"
     except Exception:
         pass
 

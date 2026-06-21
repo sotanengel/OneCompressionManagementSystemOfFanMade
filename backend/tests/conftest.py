@@ -11,6 +11,7 @@ os.environ.setdefault(
     "OCMS_DATABASE_URL",
     "postgresql+psycopg://ocms:ocms_local@localhost:5432/ocms",
 )
+os.environ.setdefault("OCMS_S3_BUCKET", "ocms-bucket")
 
 from ocms.storage.db import Base  # noqa: E402
 
