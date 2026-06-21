@@ -38,6 +38,9 @@ const INSTANCE_TYPES = [
   "g6.2xlarge",
 ] as const;
 
+const SHOW_EXPERIMENTAL_FLAGS =
+  process.env.NEXT_PUBLIC_SHOW_EXPERIMENTAL_FLAGS === "1";
+
 type FormState = {
   modelPreset: string;
   customModelId: string;
@@ -267,41 +270,33 @@ export function JobForm() {
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="font-semibold text-gray-900">未公開機能</h2>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.featurePreflight}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, featurePreflight: e.target.checked }))
-              }
-              className="w-4 h-4"
-            />
-            <span className="text-sm">
-              check-env-preflight を有効化
-              <span className="ml-2 text-xs text-gray-500">
-                (sotanengel:feature/check-env-preflight)
-              </span>
-            </span>
-          </label>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.featureCheckpoint}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, featureCheckpoint: e.target.checked }))
-              }
-              className="w-4 h-4"
-            />
-            <span className="text-sm">
-              checkpoint を有効化
-              <span className="ml-2 text-xs text-gray-500">
-                (sotanengel:feature/checkpoint)
-              </span>
-            </span>
-          </label>
-        </section>
+        {SHOW_EXPERIMENTAL_FLAGS && (
+          <section className="space-y-3">
+            <h2 className="font-semibold text-gray-900">実験的機能</h2>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.featurePreflight}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, featurePreflight: e.target.checked }))
+                }
+                className="w-4 h-4"
+              />
+              <span className="text-sm">環境プリフライト検証を有効化</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.featureCheckpoint}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, featureCheckpoint: e.target.checked }))
+                }
+                className="w-4 h-4"
+              />
+              <span className="text-sm">チェックポイント保存を有効化</span>
+            </label>
+          </section>
+        )}
 
         <section className="space-y-3">
           <h2 className="font-semibold text-gray-900">EC2 設定</h2>
