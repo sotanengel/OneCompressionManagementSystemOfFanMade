@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { CostChart } from "@/components/CostChart";
+import { apiFetch } from "@/lib/api";
 
 interface CostSummary {
   total_usd: number;
@@ -13,7 +14,7 @@ interface CostSummary {
 type Period = "week" | "month" | "all";
 
 async function fetchSummary(period: Period): Promise<CostSummary> {
-  const res = await fetch(`/api/cost/summary?period=${period}&group_by=model`);
+  const res = await apiFetch(`/api/cost/summary?period=${period}&group_by=model`);
   if (!res.ok) throw new Error(`Failed to fetch cost summary: ${res.status}`);
   return res.json();
 }

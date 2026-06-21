@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { apiFetch } from "@/lib/api";
+
 const MODELS = [
   { value: "meta-llama/Llama-3.1-8B-Instruct", label: "Llama 3.1 8B", family: "llama" },
   { value: "meta-llama/Llama-3.2-1B-Instruct", label: "Llama 3.2 1B", family: "llama" },
@@ -106,7 +108,7 @@ export function JobForm() {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await fetch("/api/jobs", {
+      const res = await apiFetch("/api/jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

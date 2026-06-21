@@ -6,12 +6,17 @@ from decimal import Decimal
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from ocms.api.auth import verify_cognito_jwt
 from ocms.api.deps import get_db
 from ocms.api.schemas import CostSummaryResponse
 from ocms.core.models import Job
 from ocms.storage.repository import JobRepository
 
-router = APIRouter(prefix="/cost", tags=["cost"])
+router = APIRouter(
+    prefix="/cost",
+    tags=["cost"],
+    dependencies=[Depends(verify_cognito_jwt)],
+)
 
 BUDGET_WARNING_USD = Decimal("50")
 BUDGET_HARD_LIMIT_USD = Decimal("100")

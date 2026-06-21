@@ -10,11 +10,16 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
+from ocms.api.auth import verify_cognito_jwt
 from ocms.api.deps import get_db
 from ocms.core.models import JobLog, JobStatus
 from ocms.storage.repository import JobRepository
 
-router = APIRouter(prefix="/jobs", tags=["log-stream"])
+router = APIRouter(
+    prefix="/jobs",
+    tags=["log-stream"],
+    dependencies=[Depends(verify_cognito_jwt)],
+)
 
 _TERMINAL_STATUSES = {JobStatus.COMPLETED, JobStatus.FAILED}
 

@@ -14,11 +14,18 @@ class Settings(BaseSettings):
 
     database_url: str
     s3_bucket: str
+    cognito_user_pool_id: str
+    cognito_client_id: str
     aws_region: str = "us-east-1"
+    cognito_region: str | None = None
     max_concurrent_jobs: int = 10
     cost_warn_usd: float = 50.0
     cost_hard_stop_usd: float = 100.0
     cors_origins: list[str] = []
+
+    @property
+    def effective_cognito_region(self) -> str:
+        return self.cognito_region or self.aws_region
 
     @field_validator("cors_origins", mode="before")
     @classmethod
