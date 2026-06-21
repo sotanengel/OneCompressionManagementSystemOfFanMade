@@ -28,3 +28,17 @@ def test_settings_missing_database_url_raises(monkeypatch: pytest.MonkeyPatch) -
     monkeypatch.delenv("OCMS_DATABASE_URL", raising=False)
     with pytest.raises(Exception):  # noqa: B017
         Settings()
+
+
+def test_settings_missing_s3_bucket_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OCMS_DATABASE_URL", "postgresql+psycopg://u:p@localhost/db")
+    monkeypatch.delenv("OCMS_S3_BUCKET", raising=False)
+    with pytest.raises(Exception):  # noqa: B017
+        Settings()
+
+
+def test_settings_reads_s3_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OCMS_DATABASE_URL", "postgresql+psycopg://u:p@localhost/db")
+    monkeypatch.setenv("OCMS_S3_BUCKET", "my-prod-bucket")
+    s = Settings()
+    assert s.s3_bucket == "my-prod-bucket"
