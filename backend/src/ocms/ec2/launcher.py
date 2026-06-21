@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING, cast
 
 import boto3
+
+if TYPE_CHECKING:
+    from mypy_boto3_ec2.literals import InstanceTypeType
 
 _DEFAULT_VCPU_LIMIT = 32
 
@@ -14,7 +18,11 @@ class VcpuQuotaExceededError(Exception):
 def check_vcpu_quota(instance_type: str, region: str) -> None:
     ec2 = boto3.client("ec2", region_name=region)
 
-    it_response = ec2.describe_instance_types(InstanceTypes=[instance_type])  # type: ignore[list-item]
+    # AWS publishes new instance types regularly; the literal in botocore-stubs
+    # lags behind. Accept any string the caller passes through.
+    it_response = ec2.describe_instance_types(
+        InstanceTypes=[cast("InstanceTypeType", instance_type)]
+    )
     if not it_response["InstanceTypes"]:
         raise ValueError(f"Unknown instance type: {instance_type}")
     requested_vcpus = it_response["InstanceTypes"][0]["VCpuInfo"]["DefaultVCpus"]

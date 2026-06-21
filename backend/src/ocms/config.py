@@ -35,7 +35,10 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()  # type: ignore[call-arg]
+    # `BaseSettings` populates required fields from the environment, but mypy
+    # only sees the dataclass-like constructor signature. `model_validate({})`
+    # is the documented escape hatch that triggers the same env-loading.
+    return Settings.model_validate({})
 
 
 def get_secret(secret_name: str) -> str:
