@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="OCMS_", case_sensitive=False)
 
     database_url: str
+    s3_bucket: str
     aws_region: str = "us-east-1"
     max_concurrent_jobs: int = 10
     cost_warn_usd: float = 50.0
